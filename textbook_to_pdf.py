@@ -1,7 +1,8 @@
 import requests
 import shutil
 import os
-from PIL import Image
+from time import sleep
+import img2pdf
 import json
 
 requests.packages.urllib3.disable_warnings()
@@ -22,7 +23,8 @@ def generate_dir(name="textbook"):
 
 
 cookies = {
-    "wsipnet_session": "eyJpdiI6ImcwUmRmYnkyeEthWHdHXC83QkdtYmhRPT0iLCJ2YWx1ZSI6IkhtbW83Z2pldWl6THJwSkgwdTRrcUhzek5qcW9jVFk1eTFreGFmSGZZK1FCamk3T2FJUDFDT2VYdXNFUnlXWVNmd25XWTNMOVpmSUN3bkVLc3djcVZ3PT0iLCJtYWMiOiI3MzQzYzEwMWQ5YTRlZjMzZWJhNTExNDJhY2Q5ZmQ5MjZmMDFjMjdhZTYxZWUyZDg1Zjg5Y2Q1MTY2MDE4ZTk1In0"
+    #  change your code here
+    "auth_cookie": r"cookie_content"
 }
 
 with open("textbook_urls.json") as file:
@@ -38,9 +40,15 @@ for textbook, url in textbooks.items():
     i = 0
     while True:
         i += 1
-        resp = requests.get(url.format(i), cookies=cookies, verify=False, stream=True)
 
-        if resp.status_code != 200 or resp.headers["Content-Type"] != "image/jpeg":
+        #  sleep(0.5)  # uncomment if you get connection time out
+
+        page = str(i)
+        #  page = page.zfill(3)  # uncomment to fill page number with leading zeros
+
+        resp = requests.get(url.format(page), cookies=cookies, verify=False, stream=True)
+
+        if resp.status_code != 200 or resp.headers["Content-Type"] != "image/jpeg":  # make sure your page url returns correct status code and content type
             break
 
         img_path = f"{dir_path}/image{i}.jpg"
@@ -48,11 +56,10 @@ for textbook, url in textbooks.items():
             resp.raw.decode_content = True
             shutil.copyfileobj(resp.raw, file)
 
-        img = Image.open(img_path)
-        img = img.convert("RGB")
-        imgs.append(img)
+        imgs.append(img_path)
         print(f"image{i}.jpg saved")
 
-    imgs[0].save(f"{dir_path}.pdf", save_all=True, append_images=imgs[1:])
+    with open(f"{dir_path}.pdf", "wb") as file:
+        file.write(img2pdf.convert(imgs))
 
     print(f"textbook {textbook} saved as {dir_path}.pdf")
