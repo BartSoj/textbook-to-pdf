@@ -1,0 +1,1 @@
+cookie_name1=cookie_content1; cookie_name2=cookie_content2; cookie_foo=foo;cookie_bar=bar
